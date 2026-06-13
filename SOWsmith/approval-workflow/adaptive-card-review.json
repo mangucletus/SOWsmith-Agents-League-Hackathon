@@ -1,0 +1,28 @@
+{
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    { "type": "TextBlock", "text": "Bid Package Awaiting Review",
+      "weight": "Bolder", "size": "Large", "color": "Accent" },
+    { "type": "FactSet", "facts": [
+        { "title": "Service Type:",  "value": "@{variables('service_type')}" },
+        { "title": "Document Type:", "value": "@{variables('document_type')}" },
+        { "title": "Author:",        "value": "@{triggerOutputs()?['body/Author/DisplayName']}" },
+        { "title": "Submitted:",     "value": "@{utcNow()}" },
+        { "title": "Review Status:", "value": "@{variables('review_status')}" }
+    ]},
+    { "type": "TextBlock", "text": "Preview (first 500 chars):", "weight": "Bolder", "spacing": "Medium" },
+    { "type": "TextBlock", "text": "@{substring(body('Get_file_content'),0,500)}",
+      "wrap": true, "isSubtle": true },
+    { "type": "Input.Text", "id": "comments", "placeholder": "Comments (optional)",
+      "isMultiline": true }
+  ],
+  "actions": [
+    { "type": "Action.Submit", "title": "Approve",
+      "data": { "action": "Approve" }, "style": "positive" },
+    { "type": "Action.Submit", "title": "Request Changes",
+      "data": { "action": "RequestChanges" } },
+    { "type": "Action.Submit", "title": "Reject",
+      "data": { "action": "Reject" }, "style": "destructive" }
+  ]
+}

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bid-package-generator"
+version = "0.1.0"
+description = "Bid Package Generator (SOW/RFP) — runnable reference implementation of the Supply Chain bid-package POC for SOWsmith"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary — SOWsmith (POC)" }
+dependencies = [
+    "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "python-pptx>=0.6",
+    "reportlab>=4.0",
+    "pypdf>=4.0",
+]
+
+[project.optional-dependencies]
+# Real generation against Azure OpenAI (otherwise a deterministic offline mock is used)
+azure = ["openai>=1.40"]
+# Optional local OCR backend for scanned/legacy PDFs & images (also needs the Tesseract binary).
+# Production uses Azure AI Document Intelligence instead; the digital text path works without this.
+ocr = ["pytesseract>=0.3", "pdf2image>=1.16", "Pillow>=10.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+bidpkg = "bid_package_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["agent/src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["agent/src"]
+testpaths = ["agent/tests"]

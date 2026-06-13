@@ -1,0 +1,15 @@
+# Runtime dependencies for the Bid Package Generator reference engine + KB generator.
+# Install with:  pip install -e .            (or)   pip install -r requirements.txt
+python-docx>=1.1      # read/write the DOCX bid documents (KB + engine grounding)
+openpyxl>=3.1         # read/write the XLSX lists (Reviewers, AuditLog, matrices)
+python-pptx>=0.6      # read/write the PPTX decks
+reportlab>=4.0        # generate the PDF resources (KB generator)
+pypdf>=4.0            # extract text from PDF resources (engine retrieval / Q&A)
+
+# Optional — real generation against Azure OpenAI (GPT-4).
+# Without these env vars set, the engine uses a deterministic OFFLINE MOCK.
+#   pip install "openai>=1.40"
+# openai>=1.40
+
+# Dev / tests
+# pytest>=8.0

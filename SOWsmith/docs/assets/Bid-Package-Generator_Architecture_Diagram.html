@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bid Package Generator (SOW/RFP) — Interactive Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B2A35; --navy:#0C3B4D; --navy-2:#114b60;
+    --green:#1f9e6f; --green-deep:#137a54; --green-soft:#e7f5ef;
+    --amber:#e07b27; --amber-deep:#bd6015; --amber-soft:#fdf0e4;
+    --red:#c0392b; --indigo:#5a52c4;
+    --line:#9fb1ba; --line-soft:#cdd8dd;
+    --paper:#eef3f5; --card:#ffffff; --muted:#5b727c; --muted-2:#82959d; --border:#d9e1e5;
+    --fx:#0C3B4D;
+    --shadow:0 1px 2px rgba(11,42,53,.05), 0 8px 22px -12px rgba(11,42,53,.20);
+    --shadow-lg:0 2px 4px rgba(11,42,53,.07), 0 24px 48px -20px rgba(11,42,53,.30);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;overflow-x:hidden;max-width:100%;}
+  body{
+    background:
+      radial-gradient(circle at 1px 1px, rgba(12,59,77,.055) 1px, transparent 0) 0 0/30px 30px,
+      linear-gradient(180deg,#f1f5f7 0%, #e6edef 100%);
+    background-attachment:fixed;
+    font-family:"IBM Plex Sans",sans-serif; color:var(--ink); min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ============ DOCK (controls) ============ */
+  .dock{position:sticky;top:0;z-index:60;backdrop-filter:blur(8px);
+        background:linear-gradient(180deg, rgba(255,255,255,.93), rgba(255,255,255,.82));
+        border-bottom:1px solid var(--border);box-shadow:0 6px 20px -16px rgba(11,42,53,.5);}
+  .topbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:11px 22px 10px;}
+  .brand{font-family:"Archivo",sans-serif;font-weight:800;font-size:16px;letter-spacing:-.01em;color:var(--navy);white-space:nowrap;}
+  .brand b{color:var(--amber-deep);}
+  .brand span{display:block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-top:1px;}
+  .flowbtns{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .lead{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:2px;}
+  .fbtn{font-family:"IBM Plex Sans",sans-serif;font-size:12.5px;font-weight:600;color:var(--navy);
+        background:#fff;border:1px solid var(--border);border-radius:999px;padding:7px 14px 7px 12px;cursor:pointer;
+        display:inline-flex;align-items:center;gap:7px;transition:all .16s ease;white-space:nowrap;}
+  .fbtn .dot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%, transparent);}
+  .fbtn:hover{transform:translateY(-1px);box-shadow:var(--shadow);border-color:var(--c);}
+  .fbtn.active{background:var(--c);color:#fff;border-color:var(--c);box-shadow:0 6px 16px -8px var(--c);}
+  .fbtn.active .dot{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.3);}
+  .fbtn.ask{--c:var(--green);} .fbtn.draft{--c:var(--amber);} .fbtn.decide{--c:var(--navy-2);}
+  .fbtn.legal{--c:var(--indigo);} .fbtn.refuse{--c:var(--red);} .fbtn.evaluate{--c:#0f766e;}
+  .fbtn.reset{--c:var(--muted);color:var(--muted);font-weight:500;}
+  .fbtn.reset:hover{color:var(--navy);}
+
+  /* narration bar */
+  .narration{display:flex;align-items:stretch;gap:0;border-top:1px solid #eaeff1;flex-wrap:wrap;
+             background:linear-gradient(90deg, color-mix(in srgb,var(--fx) 8%, #fff), #fff 38%);
+             min-height:64px;padding:0;}
+  .nar-accent{width:5px;background:var(--fx);flex:0 0 5px;transition:background .25s;}
+  .nar-left{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:10px 16px;border-right:1px solid #eef2f4;min-width:172px;}
+  .flowchip{font-family:"Archivo",sans-serif;font-weight:700;font-size:12.5px;color:var(--fx);line-height:1.1;}
+  .counter{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:500;color:var(--muted-2);letter-spacing:.04em;}
+  .progress{height:3px;border-radius:2px;background:#e7edef;overflow:hidden;width:140px;margin-top:2px;}
+  .progress i{display:block;height:100%;width:0;background:var(--fx);border-radius:2px;transition:width .35s ease;}
+  .nar-body{flex:1 1 360px;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:9px 18px;min-width:0;}
+  .nar-route{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.02em;color:var(--fx);opacity:.92;display:none;}
+  .nar-route:not(:empty){display:block;}
+  .nar-body strong{font-family:"Archivo",sans-serif;font-weight:700;font-size:14px;color:var(--ink);letter-spacing:-.005em;}
+  .nar-body span{font-size:12.5px;line-height:1.45;color:var(--muted);}
+  .nar-ctrl{display:flex;align-items:center;gap:10px;padding:10px 18px;border-left:1px solid #eef2f4;flex-wrap:wrap;}
+  .speed{display:flex;flex-direction:column;gap:3px;align-items:center;padding:4px 12px 5px;border:1px solid var(--border);
+         border-radius:10px;background:#fff;}
+  .speed label{font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;color:var(--muted);white-space:nowrap;}
+  .speed input[type=range]{width:118px;height:5px;accent-color:var(--amber);cursor:pointer;}
+  .speed #speedVal{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;color:var(--amber-deep);}
+  .nbtn{font-family:"IBM Plex Sans",sans-serif;font-size:12px;font-weight:600;color:var(--navy);background:#fff;
+        border:1px solid var(--border);border-radius:8px;padding:7px 11px;cursor:pointer;transition:all .14s;white-space:nowrap;}
+  .nbtn:hover:not(:disabled){border-color:var(--fx);color:var(--fx);}
+  .nbtn.play{background:var(--fx);color:#fff;border-color:var(--fx);min-width:78px;}
+  .nbtn.play:hover{filter:brightness(1.08);color:#fff;}
+  .nbtn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* ============ STAGE ============ */
+  .viewport{width:100%;overflow:hidden;padding-top:8px;}
+  .stage{position:relative;width:1660px;height:1010px;transform-origin:top left;margin:0;transition:filter .3s;}
+
+  svg.layer{position:absolute;inset:0;width:1660px;height:1010px;overflow:visible;pointer-events:none;}
+  svg.wires{z-index:1;} svg.packets{z-index:5;}
+  .wire{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:opacity .3s;}
+  .w-grey{stroke:#6f8a96;stroke-width:2.8;}
+  .w-grey-dash{stroke:#6f8a96;stroke-width:2.6;stroke-dasharray:2 8;}
+  .w-green{stroke:var(--green);stroke-width:3.4;}
+  .w-amber{stroke:var(--amber);stroke-width:3.4;}
+  .flow-dash{stroke-width:3.6;stroke-dasharray:1 20;opacity:.9;animation:flow var(--flow-dur,2.6s) linear infinite;}
+  .flow-green{stroke:#3fc78f;} .flow-amber{stroke:#f59140;}
+  @keyframes flow{to{stroke-dashoffset:-42;}}
+
+  .packet .pk-halo{fill:currentColor;opacity:.28;}
+  .packet .pk-core{fill:#fff;stroke:currentColor;stroke-width:3.5;}
+  .packet{color:var(--fx);filter:drop-shadow(0 0 10px currentColor) drop-shadow(0 0 3px currentColor);}
+
+  /* nodes */
+  .node{position:absolute;z-index:2;background:var(--card);border:1px solid var(--border);border-radius:16px;
+        box-shadow:var(--shadow);opacity:0;transform:translateY(10px);
+        animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards;transition:opacity .3s, filter .3s, box-shadow .3s, transform .25s;}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+  .node .hd{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid var(--border);border-radius:16px 16px 0 0;}
+  .node .ic{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:7px;}
+  .node .ic svg{width:16px;height:16px;display:block;}
+  .node .ti{font-family:"Archivo",sans-serif;font-weight:700;font-size:15px;letter-spacing:-.01em;line-height:1.1;color:var(--navy);}
+  .node .sub{font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px;letter-spacing:.01em;}
+  .node .bd{padding:11px 14px 13px;}
+  .tag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:500;letter-spacing:.02em;
+       padding:2.5px 7px;border-radius:5px;background:#eef3f5;color:var(--navy-2);border:1px solid #dde6ea;}
+  .acc-green{border-top:3px solid var(--green);} .acc-amber{border-top:3px solid var(--amber);} .acc-navy{border-top:3px solid var(--navy);}
+  .ic-navy{background:var(--navy);color:#fff;} .ic-green{background:var(--green-soft);color:var(--green-deep);}
+  .ic-amber{background:var(--amber-soft);color:var(--amber-deep);} .ic-slate{background:#eaf0f3;color:var(--navy-2);}
+
+  .trow{display:flex;align-items:flex-start;gap:8px;padding:7px 6px;border-bottom:1px dashed #e4ebee;border-radius:7px;transition:background .2s,box-shadow .2s;}
+  .trow:last-child{border-bottom:0;}
+  .trow .n{font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;color:#fff;background:var(--navy);border-radius:4px;padding:2px 5px;flex:0 0 auto;margin-top:1px;}
+  .trow .n.g{background:var(--green-deep);} .trow .n.a{background:var(--amber-deep);}
+  .trow .tt{font-size:12px;font-weight:600;color:var(--ink);line-height:1.2;}
+  .trow .td{font-size:10px;color:var(--muted);margin-top:1px;}
+
+  .kbgroup{font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin:10px 0 6px;}
+  .kbgroup:first-child{margin-top:0;}
+  .chip{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:8px;background:#f6f9fa;border:1px solid #e6edf0;margin-bottom:5px;border-left-width:3px;transition:background .2s,box-shadow .2s,transform .2s;}
+  .chip .cn{font-size:11px;font-weight:600;color:var(--ink);line-height:1.15;}
+  .chip .cd{font-size:9.5px;color:var(--muted);}
+  .chip.read{border-left-color:var(--green);} .chip.write{border-left-color:var(--amber);} .chip.meta{border-left-color:var(--line);}
+
+  .subcard{background:#f6f9fa;border:1px solid #e6edf0;border-radius:11px;padding:10px 12px;transition:background .2s,box-shadow .2s;}
+  .subcard .st{font-family:"Archivo",sans-serif;font-weight:700;font-size:12.5px;color:var(--navy);}
+  .subcard .sd{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3;}
+
+  .diamond{position:absolute;z-index:2;width:156px;height:156px;transform:rotate(45deg);
+    background:linear-gradient(135deg,#fff6ee,#fdedde);border:2px solid var(--amber);border-radius:16px;
+    box-shadow:var(--shadow);opacity:0;animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards;transition:opacity .3s, box-shadow .3s, transform .25s;}
+  .diamond .inner{position:absolute;inset:0;transform:rotate(-45deg);display:grid;place-items:center;text-align:center;padding:6px;}
+  .diamond .dt{font-family:"Archivo",sans-serif;font-weight:700;font-size:13.5px;color:var(--amber-deep);line-height:1.1;}
+  .diamond .dd{font-size:9.5px;color:var(--muted);margin-top:4px;line-height:1.3;}
+
+  .lab{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:10.5px;font-weight:600;
+       background:#ffffff;padding:3px 8px;border-radius:6px;white-space:nowrap;transition:opacity .3s;
+       border:1px solid var(--line-soft);box-shadow:0 1px 3px rgba(11,42,53,.10);}
+  .lab.g{color:var(--green-deep);} .lab.a{color:var(--amber-deep);} .lab.k{color:var(--navy-2);font-weight:600;}
+  .lab.mono{font-family:"IBM Plex Mono",monospace;font-size:9.5px;}
+  .band{position:absolute;z-index:3;transform:translate(-50%,-50%);font-family:"IBM Plex Mono",monospace;
+        font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px;transition:opacity .3s;}
+  .band.g{color:var(--green-deep);background:var(--green-soft);border:1px solid #c4e7d7;}
+  .band.a{color:var(--amber-deep);background:var(--amber-soft);border:1px solid #f4d9bf;}
+  .caption{position:absolute;z-index:3;transform:translate(-50%,-50%);text-align:center;font-size:10px;font-style:italic;color:var(--muted);line-height:1.35;transition:opacity .3s;}
+
+  /* title + legend (kept for print/slide) */
+  .title{position:absolute;left:30px;top:22px;width:630px;z-index:4;}
+  .title .kick{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.16em;color:var(--amber-deep);text-transform:uppercase;}
+  .title h1{font-family:"Archivo",sans-serif;font-weight:800;font-size:31px;line-height:1.02;letter-spacing:-.02em;color:var(--navy);margin:7px 0 0;}
+  .title .rule{width:64px;height:4px;background:var(--amber);border-radius:2px;margin:11px 0 9px;}
+  .title h2{font-family:"Archivo",sans-serif;font-weight:600;font-size:15px;color:var(--ink);margin:0;letter-spacing:-.01em;}
+  .legend{position:absolute;left:712px;top:24px;z-index:4;display:flex;gap:15px;align-items:center;
+          background:rgba(255,255,255,.72);border:1px solid var(--border);border-radius:12px;padding:9px 15px;box-shadow:var(--shadow);}
+  .legend .li{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;color:var(--ink);}
+  .legend .sw{width:22px;height:0;border-top-width:3px;border-top-style:solid;border-radius:2px;}
+  .legend .sw.g{border-color:var(--green);} .legend .sw.a{border-color:var(--amber);}
+  .legend .sw.s{border-color:var(--line);} .legend .sw.d{border-color:var(--line);border-top-style:dashed;}
+
+  .footer{position:absolute;left:0;top:958px;width:1660px;height:48px;z-index:4;display:flex;align-items:center;justify-content:space-between;padding:0 30px;border-top:1px solid var(--line-soft);}
+  .stackchips{display:flex;gap:7px;flex-wrap:wrap;}
+  .schip{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:500;color:var(--navy-2);background:#fff;border:1px solid var(--border);border-radius:6px;padding:4px 9px;}
+  .srcnote{font-size:10.5px;color:var(--muted);text-align:right;line-height:1.4;}
+  .srcnote b{color:var(--navy);font-weight:600;}
+
+  /* ============ FOCUS / HIGHLIGHT STATES ============ */
+  /* Dimmed (not active) elements stay clearly READABLE — the active path simply pops above them. */
+  .stage.focus .node, .stage.focus .diamond{opacity:.34;box-shadow:none;filter:saturate(.7);}
+  .stage.focus .wire{opacity:.2;}
+  .stage.focus .lab, .stage.focus .band, .stage.focus .caption{opacity:.3;}
+  .stage.focus .flow-dash{opacity:0;}
+  .stage.focus .legend, .stage.focus .title, .stage.focus .footer{opacity:.85;}
+
+  .node.lit{opacity:1 !important;filter:none !important;box-shadow:var(--shadow) !important;}
+  .node.hl{opacity:1 !important;filter:none !important;outline:2.5px solid var(--fx);outline-offset:2px;
+           box-shadow:var(--shadow-lg), 0 0 30px -6px color-mix(in srgb,var(--fx) 60%, transparent) !important;
+           transform:translateY(-3px);animation:none;}
+  .diamond.hl{opacity:1 !important;filter:none !important;outline:2.5px solid var(--fx);outline-offset:2px;
+           box-shadow:var(--shadow-lg), 0 0 30px -6px color-mix(in srgb,var(--fx) 60%, transparent) !important;
+           transform:rotate(45deg) scale(1.05);}
+  .wire.hl{opacity:1 !important;stroke-width:5;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--fx) 75%, transparent));}
+  .chip.hl{opacity:1 !important;background:color-mix(in srgb,var(--fx) 16%, #fff);outline:2.5px solid var(--fx);outline-offset:-1px;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--fx) 70%, transparent);transform:translateX(2px);}
+  .trow.hl{background:color-mix(in srgb,var(--fx) 12%, #fff);box-shadow:inset 3px 0 0 var(--fx);}
+  .subcard.hl{background:color-mix(in srgb,var(--fx) 10%, #fff);outline:2px solid var(--fx);}
+
+  .node:not(.hl):hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+
+  /* ============ HOVER-FOR-DETAIL (cleaner boxes) ============ */
+  /* Descriptions live in a tooltip on hover. Boxes show names/structure only. */
+  .node .bd .sub, .trow .td, .chip .cd, .subcard .sd{display:none;}
+  /* simple boxes become compact header-only cards (details on hover) */
+  .node[data-node="users"], .node[data-node="teams"], .node[data-node="grounded"],
+  .node[data-node="draft"], .node[data-node="pa"]{display:flex;align-items:center;}
+  .node[data-node="users"] .hd, .node[data-node="teams"] .hd, .node[data-node="grounded"] .hd,
+  .node[data-node="draft"] .hd, .node[data-node="pa"] .hd{border-bottom:0;width:100%;}
+  .node[data-node="users"] .bd, .node[data-node="teams"] .bd, .node[data-node="grounded"] .bd,
+  .node[data-node="draft"] .bd, .node[data-node="pa"] .bd{display:none;}
+  [data-tip]{cursor:help;}
+  .node[data-tip]:hover, .diamond[data-tip]:hover, .subcard[data-tip]:hover{outline:1.5px solid color-mix(in srgb,var(--navy) 35%, transparent);outline-offset:2px;}
+  #tip{position:fixed;z-index:200;max-width:300px;background:linear-gradient(180deg,#0e4456,#0b3445);
+       color:#eaf2f5;font-family:"IBM Plex Sans",sans-serif;font-size:12px;line-height:1.5;padding:11px 13px;
+       border-radius:11px;box-shadow:0 16px 36px -10px rgba(11,42,53,.6);pointer-events:none;opacity:0;
+       transform:translateY(4px);transition:opacity .12s ease, transform .12s ease;border:1px solid rgba(255,255,255,.08);}
+  #tip.show{opacity:1;transform:translateY(0);}
+  #tip b{color:#fff;display:block;font-family:"Archivo",sans-serif;font-size:12.5px;margin-bottom:3px;}
+  #tip .tip-kicker{color:#9fc7d4;font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:5px;}
+
+  .hint{position:fixed;right:14px;bottom:12px;font-size:11px;color:var(--muted-2);font-family:"IBM Plex Mono",monospace;z-index:50;}
+  @media print{
+    .dock,.hint{display:none !important;}
+    body{background:#fff;}
+    .stage.focus .node,.stage.focus .diamond,.stage.focus .wire,.stage.focus .lab,.stage.focus .band,.stage.focus .caption{opacity:1 !important;filter:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ CONTROLS DOCK ============ -->
+<div class="dock">
+  <div class="topbar">
+    <div class="brand">Bid Package Agent <b>·</b> Bidding-Lifecycle Architecture<span>WS‑1 agent (two flows) + WS‑4 evaluation · Microsoft Copilot Studio · Proof of Concept</span></div>
+    <div class="flowbtns">
+      <span class="lead">Run a flow</span>
+      <button class="fbtn ask"    data-flow="ask"    title="Read path: a user asks about a past bid package or standard clause"><span class="dot"></span>Ask a bid-doc question</button>
+      <button class="fbtn draft"  data-flow="draft"  title="Write path: project brief → grounded draft → approval → published"><span class="dot"></span>Draft &amp; publish an SOW</button>
+      <button class="fbtn decide" data-flow="decide" title="The three reviewer outcomes"><span class="dot"></span>Reviewer decision</button>
+      <button class="fbtn legal"  data-flow="legal"  title="Safety rails: non-standard commercial/legal terms routing"><span class="dot"></span>Legal-sensitive path</button>
+      <button class="fbtn refuse" data-flow="refuse" title="Responsible-AI: refusing an improper request"><span class="dot"></span>Improper request</button>
+      <button class="fbtn evaluate" data-flow="evaluate" title="WS-4: compare bidder responses → recommend an award (a human approves)"><span class="dot"></span>Evaluate &amp; award (WS-4)</button>
+      <button class="fbtn reset" id="resetBtn" title="Clear and return to overview">↺ Reset</button>
+    </div>
+  </div>
+  <div class="narration" id="narration">
+    <div class="nar-accent" id="narAccent"></div>
+    <div class="nar-left">
+      <span class="flowchip" id="flowChip">Overview</span>
+      <span class="counter" id="counter">Pick a flow to begin</span>
+      <div class="progress"><i id="progBar"></i></div>
+    </div>
+    <div class="nar-body">
+      <span class="nar-route" id="stepRoute"></span>
+      <strong id="stepTitle">This diagram explains itself — run a flow.</strong>
+      <span id="stepText">Click any button above to watch a request travel end-to-end through the POC. Each step highlights the components involved and the breadcrumb shows exactly where you are in the flow.</span>
+    </div>
+    <div class="nar-ctrl">
+      <div class="speed" title="Drag to slow down or speed up the request flow for demos">
+        <label for="speed">🐢 Flow speed 🐇</label>
+        <input type="range" id="speed" min="0.4" max="3" step="0.1" value="1" />
+        <span id="speedVal">1.0×</span>
+      </div>
+      <button class="nbtn" id="prevBtn" disabled>‹ Prev</button>
+      <button class="nbtn play" id="playBtn" disabled>▶ Play</button>
+      <button class="nbtn" id="nextBtn" disabled>Next ›</button>
+    </div>
+  </div>
+</div>
+
+<div class="viewport">
+  <div class="stage" id="stage">
+
+    <div class="title">
+      <div class="kick">Proof of Concept · SOWsmith — AI Bid Package Agent</div>
+      <h1>Bid Package Generator</h1>
+      <div class="rule"></div>
+      <h2>SOW / RFP Generator — the bidding lifecycle (WS‑1 agent + WS‑4 evaluation)</h2>
+    </div>
+
+    <div class="legend">
+      <div class="li"><span class="sw g"></span>Flow A · Read (Q&amp;A)</div>
+      <div class="li"><span class="sw a"></span>Flow B · Draft → publish</div>
+      <div class="li"><span class="sw s"></span>User / tool path</div>
+      <div class="li"><span class="sw d"></span>Retrieve / feedback</div>
+    </div>
+
+    <!-- WIRES -->
+    <svg class="layer wires" viewBox="0 0 1660 1010">
+      <defs>
+        <marker id="ah-grey" markerWidth="11" markerHeight="11" refX="7.5" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L9,4 L0,8 Z" fill="#6f8a96"/></marker>
+        <marker id="ah-green" markerWidth="10" markerHeight="10" refX="7.5" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L9,4 L0,8 Z" fill="#1f9e6f"/></marker>
+        <marker id="ah-amber" markerWidth="10" markerHeight="10" refX="7.5" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L9,4 L0,8 Z" fill="#e07b27"/></marker>
+      </defs>
+      <path id="w1"  class="wire w-grey"      d="M154,490 L196,490" marker-end="url(#ah-grey)"/>
+      <path id="w2"  class="wire w-grey"      d="M366,490 L430,490" marker-end="url(#ah-grey)"/>
+      <path id="w3"  class="wire w-green"     d="M760,400 C814,400 808,196 858,196" marker-end="url(#ah-green)"/>
+      <path        class="wire flow-dash flow-green" d="M760,400 C814,400 808,196 858,196"/>
+      <path id="w4"  class="wire w-green"     d="M1122,190 L1380,176" marker-start="url(#ah-green)" marker-end="url(#ah-green)"/>
+      <path id="w5"  class="wire w-amber"     d="M760,556 C814,556 808,626 858,626" marker-end="url(#ah-amber)"/>
+      <path        class="wire flow-dash flow-amber" d="M760,556 C814,556 808,626 858,626"/>
+      <path id="w6"  class="wire w-amber"     d="M1122,627 L1180,625" marker-end="url(#ah-amber)"/>
+      <path        class="wire flow-dash flow-amber" d="M1122,627 L1180,625"/>
+      <path id="w7"  class="wire w-grey-dash" d="M760,452 L1380,452" marker-end="url(#ah-grey)"/>
+      <path id="w8"  class="wire w-amber"     d="M1265,687 L1265,716" marker-end="url(#ah-amber)"/>
+      <path id="w9"  class="wire w-amber"     d="M1375,830 C1466,830 1508,800 1508,712" marker-end="url(#ah-amber)"/>
+      <path        class="wire flow-dash flow-amber" d="M1375,830 C1466,830 1508,800 1508,712"/>
+      <path id="w10" class="wire w-grey-dash" d="M1155,830 C1052,830 992,790 992,699" marker-end="url(#ah-grey)"/>
+      <path id="w11" class="wire w-grey"      d="M560,632 L560,698" marker-start="url(#ah-grey)" marker-end="url(#ah-grey)"/>
+    </svg>
+    <svg class="layer packets" id="packets" viewBox="0 0 1660 1010"></svg>
+
+    <!-- WIRE LABELS -->
+    <div class="lab g" style="left:828px;top:300px;">Bid-document Q&amp;A</div>
+    <div class="lab g" style="left:1249px;top:163px;">retrieve approved content</div>
+    <div class="lab a" style="left:812px;top:598px;">Document draft</div>
+    <div class="lab a" style="left:1149px;top:606px;">Send for review</div>
+    <div class="lab k mono" style="left:1066px;top:438px;">Get official templates / exemplars</div>
+    <div class="lab a" style="left:1192px;top:712px;">notify reviewer</div>
+    <div class="lab a" style="left:1470px;top:802px;">approved → publish</div>
+    <div class="lab k" style="left:1040px;top:802px;">feedback / revise</div>
+    <div class="lab k" style="left:612px;top:665px;">Tools Layer</div>
+
+    <div class="band g" style="left:988px;top:104px;">Flow A · Read approved knowledge</div>
+    <div class="band a" style="left:988px;top:540px;">Flow B · Document drafting &amp; approval</div>
+    <div class="caption" style="left:1505px;top:885px;width:200px;">Only approved content<br/>is published to the KB</div>
+
+    <!-- NODES -->
+    <div class="node" data-node="users" data-tip="The people who use the agent — SOWsmith buyers, estimators and project teams. They either ask a question about a past bid package or the standard clause library (Flow A), or request a brand-new SOW or RFP draft (Flow B)." style="left:24px;top:424px;width:130px;height:134px;animation-delay:.02s;">
+      <div class="hd" style="border-bottom:0;padding-bottom:6px;">
+        <span class="ic ic-slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.2"/><path d="M15.5 20a4 4 0 0 1 5.5-3.7"/></svg></span>
+        <div><div class="ti" style="font-size:14px;">Users</div><div class="sub">buyers · estimators · project teams</div></div>
+      </div>
+      <div class="bd" style="padding-top:2px;"><div class="sub" style="line-height:1.45;">Ask about a past bid package or request a new SOW/RFP draft.</div></div>
+    </div>
+
+    <div class="node" data-node="teams" data-tip="Where people talk to the agent. Microsoft Teams is the default channel; the same Copilot Studio agent can also be published to web chat, a custom canvas, or other channels. Carries the Adaptive Card input form, the agent's grounded replies, and the reviewer's approval prompts." style="left:196px;top:420px;width:170px;height:142px;animation-delay:.07s;">
+      <div class="hd">
+        <span class="ic ic-navy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v10H8l-4 4z"/></svg></span>
+        <div><div class="ti" style="font-size:14px;">Chat Interface</div><div class="sub">Microsoft Teams (primary)</div></div>
+      </div>
+      <div class="bd" style="padding-top:9px;"><div class="sub" style="line-height:1.5;">Teams is the default channel; can also publish to web chat or other channels.</div></div>
+    </div>
+
+    <div class="node acc-navy" data-node="agent" data-tip="The Bid Package Agent, built in Microsoft Copilot Studio. It detects the user's intent and routes to one of three topics — T1 Draft a Bid Package (the generator, Flow B); T2 Bid-document Q&A, using Retrieval-Augmented Generation (RAG) over prior bid packages and the clause library (Flow A); T3 Status / Help. Text generation runs in a Generative Answers node backed by Azure OpenAI." style="left:430px;top:330px;width:330px;height:300px;box-shadow:var(--shadow-lg);animation-delay:.12s;">
+      <div class="hd">
+        <span class="ic ic-navy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 7V4"/><circle cx="12" cy="3.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="13" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1.3" fill="currentColor" stroke="none"/></svg></span>
+        <div><div class="ti" style="font-size:16px;">Bid Package Agent</div><div class="sub">Microsoft Copilot Studio · intent detection &amp; routing</div></div>
+      </div>
+      <div class="bd" style="padding-top:8px;">
+        <div class="trow" data-topic="t1"><span class="n a">T1</span><div><div class="tt">Draft a Bid Package</div><div class="td">the generator → Flow B</div></div></div>
+        <div class="trow" data-topic="t2"><span class="n g">T2</span><div><div class="tt">Bid-document Q&amp;A</div><div class="td">Retrieval-Augmented Generation over prior bids &amp; clause library → Flow A</div></div></div>
+        <div class="trow" data-topic="t3"><span class="n">T3</span><div><div class="tt">Status / Help</div><div class="td">draft status &amp; guidance</div></div></div>
+        <div style="margin-top:9px;padding-left:6px;"><span class="tag">Generative Answers node → Azure OpenAI</span></div>
+      </div>
+    </div>
+
+    <div class="node acc-green" data-node="grounded" data-tip="A read-only, cited answer composed from prior bid packages and the clause library. The agent never guesses — every answer is grounded in the Reference-Library and links back to its sources. Nothing is written or changed (this is the read path, Flow A)." style="left:858px;top:122px;width:264px;height:138px;animation-delay:.2s;">
+      <div class="hd">
+        <span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-4 4z"/><path d="M8.5 10.5l2 2 4-4.5"/></svg></span>
+        <div><div class="ti">Grounded Bid-doc Answer</div><div class="sub">Read-only response · cited</div></div>
+      </div>
+      <div class="bd" style="padding-top:9px;"><div class="sub" style="line-height:1.5;">Natural-language answer with citations back to source. <b style="color:var(--green-deep);">No content updated.</b></div></div>
+    </div>
+
+    <div class="node acc-amber" data-node="draft" data-tip="The new SOW (or RFP) draft the agent generates — seven fixed sections plus a machine-readable version footer. It is saved to the SharePoint 'Drafts' library, which is what triggers the approval workflow (this is the write path, Flow B)." style="left:858px;top:560px;width:264px;height:135px;animation-delay:.26s;">
+      <div class="hd">
+        <span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg></span>
+        <div><div class="ti">Draft Files</div><div class="sub">SharePoint “Drafts” · versioned</div></div>
+      </div>
+      <div class="bd" style="padding-top:9px;"><div class="sub" style="line-height:1.5;">Seven-section SOW/RFP draft saved with a version footer. <b style="color:var(--amber-deep);">Content updated.</b></div></div>
+    </div>
+
+    <div class="node acc-amber" data-node="pa" data-tip="Microsoft Power Automate. Triggered when a draft is saved, it parses the footer, looks up the right reviewer, posts an approval card in Microsoft Teams, moves the file based on the decision, and logs everything — with retries and error handling (a 10-action flow)." style="left:1180px;top:562px;width:170px;height:125px;animation-delay:.3s;">
+      <div class="hd" style="padding:10px 12px 8px;">
+        <span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3L5 13h6l-2 8 8-10h-6z" stroke-linejoin="round"/></svg></span>
+        <div><div class="ti" style="font-size:14px;">Power Automate</div><div class="sub">Approval routing</div></div>
+      </div>
+      <div class="bd" style="padding:10px 12px;"><div class="sub" style="line-height:1.5;">Trigger on file create · 10 actions · retries · audit log</div></div>
+    </div>
+
+    <div class="diamond" data-node="review" data-tip="The human-in-the-loop checkpoint. A reviewer receives an Adaptive Card in Microsoft Teams and chooses Approve, Request changes, or Reject. Every bid package is approved by a person before it is issued — the safeguard at the heart of the design." style="left:1187px;top:752px;animation-delay:.36s;">
+      <div class="inner"><div class="dt">Stakeholders<br/>Review</div><div class="dd">Approve ·<br/>Request changes · Reject</div></div>
+    </div>
+
+    <div class="node acc-navy" data-node="kb" data-tip="The SharePoint Online knowledge base the agent grounds on. Grounding sources — Approved-Exemplars (3–5 gold-standard SOWs that feed the generator) and Reference-Library (prior bid packages + the clause library that feed Q&A). Output libraries — Drafts, Approved, Rejected. Governance lists — Reviewers and AuditLog (the full audit trail)." style="left:1380px;top:70px;width:250px;height:640px;box-shadow:var(--shadow-lg);animation-delay:.16s;">
+      <div class="hd">
+        <span class="ic ic-navy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/></svg></span>
+        <div><div class="ti">Knowledge Base</div><div class="sub">SharePoint Online · site POC-BidPackage</div></div>
+      </div>
+      <div class="bd" style="padding:12px 13px 14px;">
+        <div class="kbgroup">Grounding sources</div>
+        <div class="chip read" data-chip="exemplars"><div><div class="cn">Approved-Exemplars</div><div class="cd">3–5 gold-standard → feeds generator</div></div></div>
+        <div class="chip read" data-chip="reference"><div><div class="cn">Reference-Library</div><div class="cd">prior bids + clause library → feeds Q&amp;A</div></div></div>
+        <div class="kbgroup">Output libraries</div>
+        <div class="chip write" data-chip="drafts"><div><div class="cn">Drafts</div><div class="cd">versioned · triggers the flow</div></div></div>
+        <div class="chip write" data-chip="approved"><div><div class="cn">Approved</div><div class="cd">published · version incremented</div></div></div>
+        <div class="chip write" data-chip="rejected"><div><div class="cn">Rejected</div><div class="cd">author may resubmit</div></div></div>
+        <div class="kbgroup">Governance lists</div>
+        <div class="chip meta" data-chip="reviewers"><div><div class="cn">Reviewers</div><div class="cd">ServiceType · Reviewer · LegalReviewer</div></div></div>
+        <div class="chip meta" data-chip="auditlog"><div><div class="cn">AuditLog</div><div class="cd">every action logged · auditable</div></div></div>
+      </div>
+    </div>
+
+    <div class="node" data-node="support" data-tip="The orchestration and generation engine behind the agent: Microsoft Copilot Studio for orchestration, and Azure OpenAI (GPT-4) for the language generation. Hover each tool for details." style="left:360px;top:700px;width:400px;height:230px;animation-delay:.34s;">
+      <div class="hd">
+        <span class="ic ic-slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg></span>
+        <div><div class="ti" style="font-size:15px;">Support Layer</div><div class="sub">Orchestration &amp; generation engine</div></div>
+      </div>
+      <div class="bd" style="display:flex;gap:11px;padding-top:11px;">
+        <div class="subcard" data-chip="copilot" data-tip="Microsoft Copilot Studio — orchestrates the agent: topics, intent routing, Adaptive Cards, and the knowledge-source wiring to SharePoint. This is where the agent itself is built (low-code, no custom hosting)." style="flex:1;">
+          <div style="display:flex;align-items:center;gap:7px;"><span class="ic ic-slate" style="width:22px;height:22px;flex:0 0 22px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span>
+            <div class="st" style="font-size:11.5px;line-height:1.1;">Microsoft<br/>Copilot Studio</div></div>
+          <div class="sd">Agent orchestration · topics · Adaptive Cards</div>
+        </div>
+        <div class="subcard" data-chip="openai" data-tip="Azure OpenAI (GPT-4) — does the drafting, summarizing and rewriting, governed by the production system prompt and its safety rails. It runs inside the Microsoft 365 tenant for data security." style="flex:1;">
+          <div style="display:flex;align-items:center;gap:7px;"><span class="ic ic-green" style="width:22px;height:22px;flex:0 0 22px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span>
+            <div class="st" style="font-size:11.5px;line-height:1.1;">Azure OpenAI<br/>GPT-4</div></div>
+          <div class="sd">Drafting · summarizing · rewriting (system prompt + safety rails)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="stackchips">
+        <span class="schip">Copilot Studio</span><span class="schip">Azure OpenAI · GPT-4</span><span class="schip">SharePoint Online</span>
+        <span class="schip">Power Automate</span><span class="schip">Microsoft Teams</span><span class="schip">Microsoft Graph</span><span class="schip">Adaptive Cards</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="tip"></div>
+<script>
+/* ============================= FLOW DEFINITIONS ============================= */
+const C = { green:'#1f9e6f', amber:'#e07b27', navy:'#114b60', indigo:'#5a52c4', red:'#c0392b', teal:'#0f766e' };
+
+const FLOWS = {
+  ask: { name:'Flow A · Ask a Bid-document Question', color:C.green, steps:[
+    { nodes:['users','teams'], wires:['w1','w2'], title:'1 · User asks a question in Teams',
+      text:'A SOWsmith buyer opens the agent in Microsoft Teams and types a plain-English question about a past bid package or the clause library — e.g. “What’s our standard exclusions clause for pipeline SOWs?”' },
+    { nodes:['agent'], topic:'t2', title:'2 · Intent routing → Topic 2 (Bid-document Q&A)',
+      text:'Copilot Studio detects the intent and routes the request to Topic 2 — Bid-document Q&A, the read-only Retrieval-Augmented Generation (RAG) topic. No drafting takes place on this path.' },
+    { nodes:['agent','support'], chips:['openai'], wires:['w11'], title:'3 · Generative Answers node calls Azure OpenAI',
+      text:'The topic’s Generative Answers node invokes Azure OpenAI (GPT-4) to interpret the question and compose a grounded answer.' },
+    { nodes:['kb'], chips:['reference'], wires:[{id:'w4',rev:true}], title:'4 · Retrieval-Augmented Generation over the Reference-Library',
+      text:'Retrieval-Augmented Generation pulls the most relevant passages from the broad Reference-Library — prior bid packages and the standard clause library — so the answer is anchored in real, approved content.' },
+    { nodes:['grounded'], wires:['w3'], title:'5 · Grounded answer assembled, with citations',
+      text:'The agent builds a grounded answer that cites the source documents it used. Because it is scoped to approved bid documents, it never guesses.' },
+    { nodes:['teams','users'], wires:[{id:'w2',rev:true},{id:'w1',rev:true}], title:'6 · Answer delivered in Teams (read-only)',
+      text:'The cited answer appears in the user’s Teams chat. Nothing is written and no version changes — Flow A is strictly read-only. Done.' },
+  ]},
+
+  draft: { name:'Flow B · Draft & Publish a Bid Package', color:C.amber, steps:[
+    { nodes:['users','teams'], wires:['w1','w2'], title:'1 · Submit a project brief via an Adaptive Card',
+      text:'A buyer submits a short project brief through an Adaptive Card in Teams: service type, document type (SOW/RFP), project context (3–5 sentences) and any special requirements.' },
+    { nodes:['agent'], topic:'t1', title:'2 · Intent routing → Topic 1 (Draft a Bid Package)',
+      text:'Trigger phrases like “draft a bid package” or “create an SOW” route the request to Topic 1 — the generator that owns the write path.' },
+    { nodes:['agent','support'], chips:['openai'], wires:['w11'], title:'3 · Generative Answers node + production system prompt',
+      text:'The Generative Answers node calls Azure OpenAI (GPT-4) using the production system prompt — seven fixed sections, hard grounding rules, and built-in Legal/Contracts safety rails.' },
+    { nodes:['kb'], chips:['exemplars'], wires:['w7'], title:'4 · Grounded on Approved-Exemplars ONLY',
+      text:'The critical scoping move: generation is scoped to the Approved-Exemplars library (3–5 gold-standard SOWs). The model copies their house style and structure — never inventing prices, quantities or facts.' },
+    { nodes:['draft'], chips:['drafts'], wires:['w5'], title:'5 · Seven-section SOW/RFP draft saved to Drafts',
+      text:'A structurally compliant SOW (or RFP) is written to the SharePoint Drafts library — versioned, with a machine-readable footer carrying the service type, document type and review status.' },
+    { nodes:['pa'], chips:['reviewers'], wires:['w6'], title:'6 · File creation triggers Power Automate',
+      text:'Saving the file fires the Power Automate flow. It reads the file, parses the footer, and looks up the correct reviewer for this service type in the Reviewers list.' },
+    { nodes:['review'], wires:['w8'], title:'7 · Reviewer notified in Teams, flow waits',
+      text:'Power Automate posts an Adaptive Card to the reviewer — service type, document type, author, a 500-character preview, and Approve / Request changes / Reject buttons — then waits for the response.' },
+    { nodes:['kb'], chips:['approved','auditlog'], wires:['w9'], title:'8 · Approve → published + logged',
+      text:'On Approve, the draft moves to the Approved library, its version is incremented, and every detail is written to AuditLog. The publish path is complete.' },
+    { nodes:['users','teams','agent','draft','pa','review','kb'], title:'9 · End-to-end: brief → draft → human approval → published',
+      text:'A short project brief became a house-style SOW in minutes instead of days — with a human approving every bid package and a full audit trail behind it. Five of these during the POC = success.' },
+  ]},
+
+  decide: { name:'Reviewer Decision · 3 Outcomes', color:C.navy, steps:[
+    { nodes:['review'], title:'A draft is awaiting review',
+      text:'When the reviewer answers the Adaptive Card, a Switch action in Power Automate branches on their choice. There are exactly three outcomes — each fully logged.' },
+    { nodes:['kb','review'], chips:['approved','auditlog'], wires:['w9'], color:C.green, title:'① Approve → Approved library',
+      text:'The file moves to the Approved library, the version is incremented to a published revision, and the action is recorded in AuditLog. This is the only way content gets published.' },
+    { nodes:['draft','review'], chips:['drafts'], wires:[{id:'w10'}], color:C.amber, title:'② Request changes → back to Drafts',
+      text:'Reviewer comments are posted to the author in Teams and the file stays in Drafts. The author revises and resubmits — the feedback / revise loop. (Target: ≤ 2 rounds.)' },
+    { nodes:['kb','review'], chips:['rejected','auditlog'], color:C.red, title:'③ Reject → Rejected library',
+      text:'The draft moves to the Rejected library and the author is notified; they may start fresh. Errors and timeouts are logged too (Action = ERROR), so nothing fails silently.' },
+  ]},
+
+  legal: { name:'Legal-Sensitive Path · Safety Rails', color:C.indigo, steps:[
+    { nodes:['users','teams'], wires:['w1','w2'], title:'1 · A request with non-standard terms',
+      text:'A buyer requests an SOW that includes liquidated damages for late completion and an indemnification clause for third-party damage — non-standard commercial/legal terms.' },
+    { nodes:['agent','support'], chips:['openai'], topic:'t1', wires:['w11'], title:'2 · Safety rails engage in the system prompt',
+      text:'The prompt’s safety rails detect a legal trigger (liquidated damages, indemnification, bonding, retainage, warranty, insurance limits, non-standard payment terms). The model still drafts — but leaves those terms as bracketed placeholders.' },
+    { nodes:['draft'], chips:['drafts'], wires:['w5'], title:'3 · Footer stamped LEGAL REVIEW REQUIRED',
+      text:'The version footer is set to REVIEW STATUS: LEGAL REVIEW REQUIRED and OPEN QUESTIONS lists what needs Legal/Contracts sign-off. The draft lands in Drafts like any other.' },
+    { nodes:['pa'], chips:['reviewers'], wires:['w6'], title:'4 · Conditional routing in Power Automate',
+      text:'Power Automate parses the footer. A Condition sees LEGAL REVIEW REQUIRED and routes to the LegalReviewerEmail instead of the standard reviewer (optionally CC-ing them).' },
+    { nodes:['review'], wires:['w8'], title:'5 · Legal/Contracts reviewer makes the call',
+      text:'The Legal/Contracts reviewer receives the Adaptive Card in Teams. Because no specific commercial terms were auto-filled, a human decides — responsible-AI by design.' },
+  ]},
+
+  refuse: { name:'Improper Request · Refusal', color:C.red, steps:[
+    { nodes:['users','teams'], wires:['w1','w2'], title:'1 · An improper instruction arrives',
+      text:'A request asks the agent to commit SOWsmith to a fixed $2,000,000 price, waive all liability, and skip legal review — instructions the agent must not follow.' },
+    { nodes:['agent'], topic:'t1', title:'2 · The agent refuses — nothing is drafted',
+      text:'The prompt’s “refuse outright” rule fires. The agent does NOT draft. It returns the canned refusal and points the user to Estimating for pricing and Legal/Contracts for terms. No file is created, so nothing ever reaches the Drafts library or the approval flow.' },
+  ]},
+
+  evaluate: { name:'WS-4 · Bid Evaluation & Award (downstream of WS-1)', color:C.teal, steps:[
+    { nodes:['users','teams'], wires:['w1','w2'], title:'1 · Bidders respond',
+      text:'After the approved package is issued, bidders submit responses (price, schedule, exclusions, terms). They come back into the agent for evaluation. (WS-4 runs in the engine; this narrates how the bidding lifecycle continues past WS-1.)' },
+    { nodes:['agent','support'], chips:['openai'], wires:['w11'], title:'2 · Normalize & compare — deterministically',
+      text:'The engine normalizes the responses to a common structure and compares them on price, schedule, exclusions and terms. The ranking is DETERMINISTIC — $0 tokens and no hallucination.' },
+    { nodes:['draft'], chips:['drafts'], wires:['w5'], title:'3 · Explainable award recommendation',
+      text:'It recommends the lowest compliant bid but FLAGS non-standard terms (→ Legal/Contracts), scope gaps and outlier pricing — an explainable memo. Above the Finance threshold, Finance sign-off is added.' },
+    { nodes:['pa'], chips:['reviewers'], wires:['w6'], title:'4 · Route for human approval',
+      text:'The recommendation routes to the approver chain — Supply Chain manager / Project Manager, plus Legal/Contracts and Finance when flagged.' },
+    { nodes:['review'], wires:['w8'], title:'5 · A human awards (never auto)',
+      text:'A person makes the award decision; the agent only recommends and flags. Draft award / regret notices are prepared for review before sending.' },
+    { nodes:['kb'], chips:['auditlog'], wires:['w9'], title:'6 · Logged — lifecycle closed',
+      text:'The recommendation and decision are written to AuditLog. This closes the bidding lifecycle: generate → evaluate → award.' },
+  ]},
+};
+
+/* Per-step ROUTE breadcrumbs — the exact component-to-component hop for each step, so the
+   flow is systematic and easy to follow. Indexed to match each flow's steps above. */
+const ROUTES = {
+  ask: [
+    'Users  ▸  Microsoft Teams  ▸  Bid Package Agent',
+    'Bid Package Agent  ·  Topic 2 (Bid-document Q&A)',
+    'Bid Package Agent  ▸  Azure OpenAI  (Generative Answers)',
+    'Knowledge Base · Reference-Library  ▸  Retrieval-Augmented Generation',
+    'Bid Package Agent  ▸  Grounded answer (cited)',
+    'Bid Package Agent  ▸  Microsoft Teams  ▸  Users',
+  ],
+  draft: [
+    'Users  ▸  Microsoft Teams  ▸  Bid Package Agent',
+    'Bid Package Agent  ·  Topic 1 (Draft a Bid Package)',
+    'Bid Package Agent  ▸  Azure OpenAI  (system prompt)',
+    'Knowledge Base · Approved-Exemplars  ▸  grounding',
+    'Bid Package Agent  ▸  SharePoint Drafts library',
+    'SharePoint Drafts  ▸  Power Automate (trigger)',
+    'Power Automate  ▸  Reviewer in Microsoft Teams',
+    'Approve  ▸  Approved library  +  AuditLog',
+    'End-to-end  ·  notes → draft → approval → published',
+  ],
+  decide: [
+    'Reviewer decision point  (Power Automate Switch)',
+    '① Approve  ▸  Approved library  +  AuditLog',
+    '② Request changes  ▸  back to Drafts (revise loop)',
+    '③ Reject  ▸  Rejected library  +  AuditLog',
+  ],
+  legal: [
+    'Users  ▸  Microsoft Teams  ▸  Bid Package Agent',
+    'Bid Package Agent  ▸  Azure OpenAI  ·  safety rails',
+    'Bid Package Agent  ▸  Drafts  (LEGAL REVIEW REQUIRED)',
+    'Power Automate  ·  conditional routing',
+    'Power Automate  ▸  Legal reviewer in Teams',
+  ],
+  refuse: [
+    'Users  ▸  Microsoft Teams  ▸  Bid Package Agent',
+    'Bid Package Agent  ▸  refusal  (no draft created)',
+  ],
+  evaluate: [
+    'Bidders respond  ▸  back into the agent',
+    'Normalize & compare bids  ·  deterministic',
+    'Award recommendation memo  ·  explainable flags',
+    'Route to approvers  (Supply Chain / PM · Legal · Finance)',
+    'Human awards  (never auto-awarded)',
+    'AuditLog  ·  lifecycle closed',
+  ],
+};
+
+/* ============================= ENGINE ============================= */
+const SVGNS='http://www.w3.org/2000/svg';
+const $=s=>document.querySelector(s);
+const stage=$('#stage'), pkLayer=$('#packets');
+let cur={key:null,i:0,playing:false}, curGen=0;
+let SPEED=1;  // demo pacing multiplier (slider): >1 faster, <1 slower
+
+const els={flowChip:$('#flowChip'),counter:$('#counter'),title:$('#stepTitle'),text:$('#stepText'),
+  route:$('#stepRoute'),prog:$('#progBar'),accent:$('#narAccent'),prev:$('#prevBtn'),next:$('#nextBtn'),
+  play:$('#playBtn'),speed:$('#speed'),speedVal:$('#speedVal')};
+
+function applySpeed(v){
+  SPEED=v;
+  els.speedVal.textContent=v.toFixed(1)+'×';
+  document.documentElement.style.setProperty('--flow-dur',(2.6/v)+'s');  // idle flow lines track the slider
+}
+
+function easeInOut(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function animatePacket(wireId,color,reverse,gen){
+  return new Promise(res=>{
+    const path=document.getElementById(wireId);
+    if(!path){res();return;}
+    const L=path.getTotalLength();
+    const g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','packet'); g.style.color=color;
+    const halo=document.createElementNS(SVGNS,'circle'); halo.setAttribute('r','15'); halo.setAttribute('class','pk-halo');
+    const core=document.createElementNS(SVGNS,'circle'); core.setAttribute('r','7.5'); core.setAttribute('class','pk-core');
+    g.appendChild(halo); g.appendChild(core); pkLayer.appendChild(g);
+    const dur=Math.max(560,Math.min(1500,L*1.7))/SPEED; const start=performance.now();
+    function frame(now){
+      if(gen!==curGen){g.remove();res();return;}
+      let t=(now-start)/dur; if(t>1)t=1;
+      const e=easeInOut(t); const d=reverse?(1-e)*L:e*L; const p=path.getPointAtLength(d);
+      g.setAttribute('transform','translate('+p.x+','+p.y+')');
+      core.setAttribute('opacity', t<.1? t/.1 : (t>.9?(1-t)/.1:1));
+      if(t<1)requestAnimationFrame(frame); else {g.remove();res();}
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+function clearHL(){
+  document.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+  document.querySelectorAll('.lit').forEach(e=>e.classList.remove('lit'));
+  pkLayer.innerHTML='';
+}
+function lit(sel){const e=document.querySelector(sel); if(e)e.classList.add('lit');}
+function hl(sel){const e=document.querySelector(sel); if(e)e.classList.add('hl');}
+
+function applyHL(step){
+  (step.nodes||[]).forEach(n=>hl('[data-node="'+n+'"]'));
+  (step.chips||[]).forEach(c=>{ hl('[data-chip="'+c+'"]');
+    if(['exemplars','reference','drafts','approved','rejected','reviewers','auditlog'].includes(c)) lit('[data-node="kb"]');
+    if(['copilot','openai'].includes(c)) lit('[data-node="support"]'); });
+  if(step.topic){ hl('[data-topic="'+step.topic+'"]'); lit('[data-node="agent"]'); }
+  (step.wires||[]).forEach(w=>hl('#'+(typeof w==='string'?w:w.id)));
+}
+
+function renderNarration(flow,idx){
+  const step=flow.steps[idx], color=step.color||flow.color, n=flow.steps.length;
+  stage.style.setProperty('--fx',color);
+  els.flowChip.textContent=flow.name;
+  els.counter.textContent='Step '+(idx+1)+' / '+n;
+  els.route.textContent=(ROUTES[cur.key] && ROUTES[cur.key][idx]) || '';
+  els.title.textContent=step.title;
+  els.text.textContent=step.text;
+  els.prog.style.width=(((idx+1)/n)*100)+'%';
+  els.accent.style.background=color;
+}
+
+function updateControls(){
+  const flow=FLOWS[cur.key];
+  if(!flow){ els.prev.disabled=els.next.disabled=els.play.disabled=true; els.play.textContent='▶ Play'; return; }
+  const last=cur.i>=flow.steps.length-1;
+  els.prev.disabled=cur.i<=0; els.next.disabled=last; els.play.disabled=false;
+  els.play.textContent=cur.playing?'❚❚ Pause':(last?'↻ Replay':'▶ Play');
+}
+
+async function goToStep(idx){
+  const flow=FLOWS[cur.key]; if(!flow)return;
+  cur.i=idx; curGen++; const my=curGen;
+  clearHL();
+  const step=flow.steps[idx], color=step.color||flow.color;
+  applyHL(step); renderNarration(flow,idx); updateControls();
+  for(const w of (step.wires||[])){
+    if(my!==curGen)return;
+    await animatePacket(typeof w==='string'?w:w.id, color, (typeof w==='object'&&w.rev), my);
+  }
+  if(cur.playing){
+    await wait(1050/SPEED);
+    if(my!==curGen)return;
+    if(idx<flow.steps.length-1){ goToStep(idx+1); }
+    else { cur.playing=false; updateControls(); }
+  }
+}
+
+function selectFlow(key){
+  if(!FLOWS[key])return;
+  cur.key=key; cur.i=0; cur.playing=true;
+  stage.classList.add('focus');
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('active',b.dataset.flow===key));
+  goToStep(0);
+}
+function resetFlow(){
+  curGen++; cur={key:null,i:0,playing:false};
+  stage.classList.remove('focus'); clearHL();
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  stage.style.setProperty('--fx','#0C3B4D');
+  els.flowChip.textContent='Overview';
+  els.counter.textContent='Pick a flow to begin';
+  els.route.textContent='';
+  els.title.textContent='This diagram explains itself — run a flow.';
+  els.text.textContent='Click any button above to watch a request travel end-to-end through the POC. Each step highlights the components involved and explains exactly what happens.';
+  els.prog.style.width='0%'; els.accent.style.background='#0C3B4D';
+  updateControls();
+}
+
+function playPause(){
+  const flow=FLOWS[cur.key]; if(!flow)return;
+  const last=cur.i>=flow.steps.length-1;
+  if(!cur.playing && last){ cur.playing=true; goToStep(0); return; }   // replay
+  cur.playing=!cur.playing;
+  if(cur.playing) goToStep(cur.i); else { curGen++; updateControls(); }
+}
+function next(){ const f=FLOWS[cur.key]; if(!f)return; cur.playing=false; if(cur.i<f.steps.length-1) goToStep(cur.i+1); }
+function prev(){ if(!FLOWS[cur.key])return; cur.playing=false; if(cur.i>0) goToStep(cur.i-1); }
+
+document.querySelectorAll('.fbtn[data-flow]').forEach(b=>b.addEventListener('click',()=>selectFlow(b.dataset.flow)));
+$('#resetBtn').addEventListener('click',resetFlow);
+els.prev.addEventListener('click',prev);
+els.next.addEventListener('click',next);
+els.play.addEventListener('click',playPause);
+els.speed.addEventListener('input',e=>applySpeed(parseFloat(e.target.value)));
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){next();} else if(e.key==='ArrowLeft'){prev();}
+  else if(e.key===' '){e.preventDefault();playPause();} else if(e.key==='Escape'){resetFlow();}
+});
+
+/* ===================== HOVER TOOLTIPS (component details) ===================== */
+const tipEl=$('#tip');
+function showTip(host,x,y){
+  const nameNode=host.querySelector('.ti,.st,.dt,.cn,.tt');
+  tipEl.replaceChildren();
+  if(nameNode){ const b=document.createElement('b'); b.textContent=nameNode.textContent.replace(/\s+/g,' ').trim(); tipEl.appendChild(b); }
+  tipEl.appendChild(document.createTextNode(host.getAttribute('data-tip')||''));
+  tipEl.classList.add('show');
+  const r=tipEl.getBoundingClientRect();
+  let nx=x+16, ny=y+16;
+  if(nx+r.width>window.innerWidth-10) nx=x-r.width-16;
+  if(ny+r.height>window.innerHeight-10) ny=y-r.height-16;
+  tipEl.style.left=Math.max(8,nx)+'px'; tipEl.style.top=Math.max(8,ny)+'px';
+}
+document.addEventListener('mousemove',e=>{
+  const host=e.target.closest('[data-tip]');
+  if(host) showTip(host,e.clientX,e.clientY);
+  else if(tipEl.classList.contains('show')) tipEl.classList.remove('show');
+});
+
+/* deep-link: #f=draft&s=5 opens a flow paused at a given step (shareable) */
+function applyHash(){
+  const m=new URLSearchParams(location.hash.replace(/^#/,''));
+  const f=m.get('f');
+  if(f && FLOWS[f]){
+    cur.key=f; cur.playing=false; stage.classList.add('focus');
+    document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('active',b.dataset.flow===f));
+    let s=parseInt(m.get('s')||'1',10)-1; if(isNaN(s))s=0;
+    s=Math.max(0,Math.min(FLOWS[f].steps.length-1,s));
+    goToStep(s);
+  }
+}
+window.addEventListener('hashchange',applyHash);
+
+/* ===================== RESPONSIVE SCALE-TO-FIT + CENTER ===================== */
+/* Scale the fixed 1660×1010 stage to fit the available width AND the height left under
+   the (wrapping) dock, then centre it horizontally. Vector content stays crisp at any
+   zoom. This guarantees the whole diagram is visible with no horizontal scrolling. */
+function fit(){
+  const vp=document.querySelector('.viewport');
+  const dock=document.querySelector('.dock');
+  const avail=vp.clientWidth;
+  const availH=Math.max(380, window.innerHeight - (dock?dock.offsetHeight:0) - 22);
+  const scale=Math.min(avail/1660, availH/1010, 1.25);
+  const tx=Math.max(0,(avail-1660*scale)/2);          // centre horizontally
+  stage.style.transform='translateX('+tx+'px) scale('+scale+')';
+  vp.style.height=(1010*scale+16)+'px';
+}
+window.addEventListener('resize',fit);
+window.addEventListener('load',()=>{fit();updateControls();applySpeed(parseFloat(els.speed.value));applyHash();});
+fit();
+</script>
+</body>
+</html>

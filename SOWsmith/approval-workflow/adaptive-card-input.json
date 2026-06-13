@@ -1,0 +1,39 @@
+{
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    { "type": "TextBlock", "text": "Draft a bid package (SOW / RFP)",
+      "weight": "Bolder", "size": "Large", "color": "Accent" },
+    { "type": "TextBlock", "wrap": true, "isSubtle": true,
+      "text": "Tell the agent about the project. It returns a structured, house-style SOW or RFP for review." },
+    { "type": "Input.ChoiceSet", "id": "service_type", "label": "Service type", "isRequired": true,
+      "errorMessage": "Select a service type",
+      "choices": [
+        { "title": "Pipeline Construction", "value": "Pipeline Construction" },
+        { "title": "Facility Maintenance", "value": "Facility Maintenance" },
+        { "title": "Electrical & Instrumentation", "value": "Electrical & Instrumentation" },
+        { "title": "Civil & Earthwork", "value": "Civil & Earthwork" },
+        { "title": "Coating & Insulation", "value": "Coating & Insulation" },
+        { "title": "Hydrotesting & Commissioning", "value": "Hydrotesting & Commissioning" },
+        { "title": "Fabrication", "value": "Fabrication" },
+        { "title": "Cathodic Protection", "value": "Cathodic Protection" },
+        { "title": "Pipeline Integrity", "value": "Pipeline Integrity" },
+        { "title": "Demolition & Abandonment", "value": "Demolition & Abandonment" },
+        { "title": "Station & Terminal", "value": "Station & Terminal" },
+        { "title": "Welding Services", "value": "Welding Services" }
+      ] },
+    { "type": "Input.ChoiceSet", "id": "document_type", "label": "Document type", "isRequired": true,
+      "value": "SOW",
+      "choices": [
+        { "title": "SOW — Statement of Work", "value": "SOW" },
+        { "title": "RFP — Request for Proposal", "value": "RFP" }
+      ] },
+    { "type": "Input.Text", "id": "project_context", "isMultiline": true, "isRequired": true,
+      "label": "Project context (3-5 sentences: scope, location, schedule, intent)" },
+    { "type": "Input.Text", "id": "special_requirements", "isMultiline": true,
+      "label": "Special requirements (optional)" }
+  ],
+  "actions": [
+    { "type": "Action.Submit", "title": "Generate draft", "data": { "action": "generate" } }
+  ]
+}

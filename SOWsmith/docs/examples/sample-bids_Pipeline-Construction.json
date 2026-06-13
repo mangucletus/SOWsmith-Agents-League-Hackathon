@@ -1,0 +1,23 @@
+[
+  {
+    "bidder": "Permian Pipeline LLC",
+    "total_price": 1250000,
+    "schedule_days": 45,
+    "exclusions": ["permits"],
+    "terms": "Standard SOWsmith terms accepted."
+  },
+  {
+    "bidder": "Lone Star Pipeliners",
+    "total_price": 1180000,
+    "schedule_days": 50,
+    "exclusions": ["permits", "site restoration"],
+    "terms": "Requests net-90 payment terms and a liquidated damages cap."
+  },
+  {
+    "bidder": "West Texas Welding & Construction",
+    "total_price": 1420000,
+    "schedule_days": 40,
+    "exclusions": ["permits"],
+    "terms": "Standard SOWsmith terms accepted."
+  }
+]

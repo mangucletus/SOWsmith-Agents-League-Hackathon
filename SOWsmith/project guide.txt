@@ -1,0 +1,152 @@
+AI Coach
+11:22 AM
+Hi, Cletus! I’m the AI Coach here to assist you. Please select a chat topic.
+
+AI Coach
+11:22 AM
+You’re starting a chat with AI to help you with the project description.
+Learn more about project descriptions
+collapsed
+AI Coach
+11:22 AM
+First, please select the type of chat session you would like to have. (It cannot be changed once the chat has started, but you can always start a new chat!)
+Learn more about chat sessions
+collapsed
+AI Coach
+11:23 AM
+You’ve already got a strong, fairly complete concept and a clear governed workflow. To round this out into a hackathon-ready project description, the biggest gap is who you’re designing for (specific persona + context) and what they’ll consider a “win.”
+
+Question 1/4: Who is the primary target user you’re building SOWsmith for (the main persona who feels the pain most day-to-day)? (Reply with one or more letters and/or additional text.)
+
+Here are a few options to get you started, though feel free to respond in your own words, with clarifications, and with natural language.
+
+A) Sales / Solutions team (e.g., account execs, solution architects) responding to RFPs and drafting SOWs
+
+B) Delivery / PMO (e.g., project managers, engagement managers) formalizing scope, assumptions, and exclusions
+
+C) Procurement / Vendor management (e.g., buyers issuing RFPs and standardizing bid packages internally)
+
+D) Other (write in additional answers)
+
+CM
+Cletus Nehinlalei Mangu
+11:23 AM
+C
+
+AI Coach
+11:23 AM
+Great—so the primary persona is Procurement/Vendor Management.
+
+Question 2/4: In that procurement context, what’s the most important “unmet need” SOWsmith should solve first (the thing that, if fixed, makes them immediately trust and adopt it)? (Reply with one or more letters and/or additional text.)
+
+Here are a few options to get you started, though feel free to respond in your own words, with clarifications, and with natural language.
+
+A) Standardization: every RFP/SOW follows the same house structure, clauses, and tone (less variance across buyers/teams)
+
+B) Risk control: reliably flags non-standard terms and forces legal review + audit trail before anything goes out
+
+C) Speed: reduces cycle time from intake to a ready-to-send draft (minutes/hours instead of days)
+
+D) Other (write in additional answers)
+
+CM
+Cletus Nehinlalei Mangu
+11:24 AM
+A, B, C
+
+AI Coach
+11:24 AM
+That combination makes sense for procurement: standardization drives consistency, risk control builds trust, and speed delivers immediate ROI.
+
+Question 3/4: What specific “trend or shift” is making this problem more urgent right now for procurement teams? (Reply with one or more letters and/or additional text.)
+
+Here are a few options to get you started, though feel free to respond in your own words, with clarifications, and with natural language.
+
+A) Higher compliance pressure (auditability, policy adherence, regulated industries, tighter governance)
+
+B) Volume + complexity increase (more vendors, more RFPs, more bespoke clauses, faster timelines)
+
+C) AI adoption with guardrails (teams want Copilot-like speed but need grounding, permissions, and human approval)
+
+D) Other (write in additional answers)
+
+CM
+Cletus Nehinlalei Mangu
+11:25 AM
+A, B, C
+
+AI Coach
+11:25 AM
+Aligned—those trends reinforce why a grounded + governed drafting agent is timely.
+
+Question 4/4: For the hackathon demo, what’s the clearest end-to-end scenario you want to show (from intake to approval), including the key artifact produced? (Reply with one or more letters and/or additional text.)
+
+Here are a few options to get you started, though feel free to respond in your own words, with clarifications, and with natural language.
+
+A) Buyer creates a new RFP from a short intake form → agent drafts a house-style RFP → flags non-standard clauses → routes to Legal in Teams → approved version saved to SharePoint
+
+B) Buyer assembles a vendor SOW using existing approved exemplars → agent drafts 7 sections with citations + placeholders → approval workflow → Word doc finalized and logged
+
+C) Buyer updates an existing template for a new engagement → agent highlights deltas vs standard language → Legal review only if deviations → publish package + audit trail
+
+D) Other (write in additional answers)
+
+CM
+Cletus Nehinlalei Mangu
+11:26 AM
+A, B, C
+
+AI Coach
+11:26 AM
+Here is the project description for the SOWsmith — a Microsoft 365 Copilot agent that drafts grounded, house-style SOW/RFP bid packages (powered by Foundry IQ) project! Let me know if you would like any changes.
+
+__
+
+SOWsmith — grounded, governed RFP/SOW drafting for Procurement
+Problem
+Procurement and vendor-management teams produce high-stakes bid packages (RFPs and SOWs) under tight timelines. Today, drafting is often built on copy/paste from prior work, which creates three recurring issues:
+
+Inconsistency: structure, tone, and clauses vary across buyers and business units.
+Risk: non-standard commercial/legal terms can slip through without the right review and audit trail.
+Slow cycle time: generating a “ready-to-send” first draft can take days of back-and-forth.
+At the same time, procurement faces rising compliance/audit pressure, increasing volume and complexity, and strong demand for AI-enabled speed with guardrails.
+
+Target users
+Primary users are Procurement / Vendor Management professionals (buyers, sourcing managers, category managers) who need to issue RFPs and standardize SOW/RFP packages across the organization, while ensuring legal and policy compliance.
+
+Proposed solution
+SOWsmith is a Microsoft 365 Copilot agent (built in Copilot Studio) that turns a short set of intake notes into a polished, house-style RFP or seven-section SOW in minutes—grounded in the organization’s own approved documents and routed through a mandatory human approval workflow.
+
+Key capabilities:
+
+House-style drafting: produces standardized RFP/SOW structure, language, and tone.
+Grounded generation with citations: uses permission-aware retrieval over approved exemplars and clause libraries so drafts are based on real, organization-approved content (with citations) and avoid invented facts.
+Non-standard term detection: identifies deviations from standard commercial/legal terms and clearly flags LEGAL REVIEW REQUIRED.
+Governed lifecycle: every draft is routed for human approval in Teams (and email if desired), with an audit trail.
+How it works (end-to-end flow)
+Intake: buyer selects RFP vs SOW and provides brief project notes (scope, timelines, vendor context).
+Retrieve approved context: agent pulls relevant exemplars/clauses from the approved library using Foundry IQ (permission-aware, cited).
+Draft package: generates a complete house-style RFP or SOW; carries domain terms verbatim and uses bracketed placeholders instead of inventing values.
+Policy/risk checks: deterministically flags non-standard legal/commercial language and routes accordingly.
+Create artifact: saves an editable Word document to SharePoint with routing metadata.
+Human approval: sends a synchronized approval request to Microsoft Teams (and email) for Approve/Reject.
+Audit + publish: moves the document to Approved/Rejected and writes an audit-log entry.
+Demo scenarios (hackathon)
+The demo will show procurement-focused, end-to-end scenarios:
+
+Creating a new RFP from a short intake → drafted RFP → deviations flagged → Legal approval in Teams → approved package saved to SharePoint with audit trail.
+Drafting a vendor SOW from approved exemplars → seven-section SOW with citations/placeholders → approval workflow → finalized Word output + audit log.
+Updating an existing template → highlights deltas vs standard language → triggers Legal review only when deviations exist → publish with traceability.
+Reliability, safety, and governance
+Grounding + permissions: drafts are based on approved internal content and respect access controls.
+No invented numbers: uses placeholders for unknown values rather than fabricating details.
+Deterministic guardrails: structure, legal routing, validation, and audit logging are rule-driven; the model is used for prose only.
+Human-in-the-loop by default: nothing is issued without explicit approval.
+Expected impact
+Faster cycle time: first drafts in minutes/hours instead of days.
+Higher consistency: standardized structure and language across procurement teams.
+Reduced risk: reliable deviation detection, enforced legal review, and auditability.
+Tech stack
+Microsoft Copilot Studio · Azure AI Foundry (Foundry IQ) · Azure OpenAI (GPT-4o) · SharePoint Online · Power Automate (Approvals) · Microsoft Teams · (Optional) Python reference engine + automated tests mirroring platform logic.
+
+__

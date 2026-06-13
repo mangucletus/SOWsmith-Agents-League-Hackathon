@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bid Package Agent Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">BP</div>
+      <div>
+        <div class="brand-title">Bid Package Agent</div>
+        <div class="brand-sub">Supply Chain · Console</div>
+      </div>
+    </div>
+
+    <div class="backend" id="backend">
+      <span class="dot"></span><span id="backendText">connecting…</span>
+    </div>
+
+    <nav class="modes">
+      <button class="mode active" data-mode="ask"><span>💬</span> Ask a question <em>Flow A</em></button>
+      <button class="mode" data-mode="draft"><span>📝</span> Draft a bid package <em>Flow B</em></button>
+      <button class="mode" data-mode="evaluate"><span>⚖️</span> Evaluate &amp; award <em>WS-4</em></button>
+      <button class="mode" data-mode="audit"><span>📋</span> Audit log</button>
+    </nav>
+
+    <div class="kb-card">
+      <div class="kb-h">Knowledge base</div>
+      <div class="kb-row"><span id="kbExemplars">–</span> approved SOW exemplars</div>
+      <div class="kb-row"><span id="kbReference">–</span> reference bid documents</div>
+      <div class="kb-row"><span id="kbReviewers">–</span> service-type routes</div>
+    </div>
+
+    <div class="side-foot">
+      Reference console for the POC. Production front-end is <b>Microsoft Teams</b>.
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- ASK -->
+    <section class="panel active" id="panel-ask">
+      <header class="phead">
+        <h1>Bid-document Q&amp;A</h1>
+        <p>Ask about prior bid packages or the clause library. Answers are grounded in the
+           <b>Reference-Library</b> and cite their sources. Read-only — nothing is changed.</p>
+      </header>
+      <div class="chat" id="chat"></div>
+      <form class="composer" id="askForm">
+        <input id="askInput" type="text" autocomplete="off"
+               placeholder="e.g. What does our standard hydrotesting scope include?" />
+        <button type="submit">Ask</button>
+      </form>
+      <div class="chips" id="askSuggest"></div>
+    </section>
+
+    <!-- DRAFT -->
+    <section class="panel" id="panel-draft">
+      <header class="phead">
+        <h1>Draft a bid package</h1>
+        <p>Turn rough project notes into a structured, house-style <b>SOW / RFP</b> grounded in the
+           <b>Approved-Exemplars</b>, then route it for human approval.</p>
+      </header>
+
+      <div class="draft-grid">
+        <form class="draft-form" id="draftForm">
+          <label>Service type
+            <select id="dType"></select>
+          </label>
+          <label>Document type
+            <select id="dDoc"><option value="SOW">SOW — Statement of Work</option><option value="RFP">RFP — Request for Proposal</option></select>
+          </label>
+          <label>Project context (3–5 sentences)
+            <textarea id="dContext" rows="5" placeholder="Describe the project: scope, location, schedule, intent…"></textarea>
+          </label>
+          <label>Special requirements (optional)
+            <input id="dSpecial" type="text" placeholder="any extra constraints" />
+          </label>
+          <button type="submit" id="dGenerate">Generate draft</button>
+        </form>
+
+        <div class="draft-out" id="draftOut">
+          <div class="empty">The generated SOW/RFP, its review status, the assigned reviewer
+            and the approval controls appear here.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVALUATE (WS-4) -->
+    <section class="panel" id="panel-evaluate">
+      <header class="phead">
+        <h1>Bid evaluation &amp; award <span style="font-weight:600;opacity:.6">· WS-4</span></h1>
+        <p>Paste the bidder responses and the agent compares them and recommends an award —
+           <b>deterministically</b>, with explainable flags (legal / finance / scope). The agent
+           ranks and flags; <b>a human awards</b>.</p>
+      </header>
+      <div class="draft-grid">
+        <form class="draft-form" id="evalForm">
+          <label>Service type
+            <select id="eType"></select>
+          </label>
+          <label>Document type
+            <select id="eDoc"><option value="SOW">SOW — Statement of Work</option><option value="RFP">RFP — Request for Proposal</option></select>
+          </label>
+          <label>Bidder responses (JSON array)
+            <textarea id="eBids" rows="10" placeholder='[{"bidder":"…","total_price":…,"schedule_days":…,"exclusions":["…"],"terms":"…"}]'></textarea>
+          </label>
+          <div class="btns">
+            <button type="button" id="eSample">Load sample bids</button>
+            <button type="submit" id="eEvaluate">Evaluate</button>
+          </div>
+        </form>
+
+        <div class="draft-out" id="evalOut">
+          <div class="empty">The comparison table, the award recommendation, flags (legal / finance /
+            scope) and the approval chain appear here.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUDIT -->
+    <section class="panel" id="panel-audit">
+      <header class="phead">
+        <h1>Audit log</h1>
+        <p>Every generation and reviewer decision is recorded — the trail that makes the
+           workflow auditable (mirrors the SharePoint <b>AuditLog</b> list).</p>
+      </header>
+      <div class="audit-wrap">
+        <table class="audit" id="auditTable">
+          <thead><tr><th>Timestamp</th><th>Action</th><th>Review status</th>
+            <th>Draft</th><th>Reviewer</th><th>Comments</th></tr></thead>
+          <tbody id="auditBody"></tbody>
+        </table>
+        <div class="empty" id="auditEmpty">No activity yet — generate and review a draft.</div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
